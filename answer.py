@@ -126,34 +126,28 @@ class NeuralNetwork:
             self.bias_hidden[i] += learning_rate * hidden_deltas[i]
 
 class NeuralNetworkField(NeuralNetwork):
-   def train_epochs_time(self, traindata, learning_rate, epochs, labels):
-    for epoch in range(epochs):
-        loss = 0
-        correct = 0
-        for i, data_point in enumerate(traindata):
-            # 라벨을 one-hot 인코딩
-            output = one_hot_encode(labels[i], 3)
-            # 역전파로 가중치 업데이트
-            self.backpropagation(data_point, expected_output=output, learning_rate=learning_rate)
-            # 순방향 계산 결과
-            _, cal_output = self.feedforward(data_point)
-            # 손실 계산
-            loss += entropy_loss(output, cal_output)
-            # 예측값 계산
-            predicted_label = cal_output.index(max(cal_output))
-            # 정답 여부 확인
-            if labels[i] == predicted_label:
-                correct += 1
+    def train_epochs_time(self, traindata, learning_rate, epochs, labels):
+        for epoch in range(epochs):
+            loss = 0
+            correct = 0
+            for i, data_point in enumerate(traindata):
+                output = one_hot_encode(labels[i], 3)
+                self.backpropagation(data_point, expected_output=output, learning_rate=learning_rate)
+                _, cal_output = self.feedforward(data_point)
+                loss += entropy_loss(output, cal_output)
+                predicted_label = cal_output.index(max(cal_output))
+                if labels[i] == predicted_label:
+                    correct += 1
 
-        # 10 에포크마다 손실과 정확도 출력
-        if epoch % 10 == 0:
-            average_loss = loss / len(traindata)
-            accuracy = correct / len(traindata)
-            print(f"{epoch}, Loss: {average_loss}, Accuracy: {accuracy}")
+            if epoch % 10 == 0:
+                average_loss = loss / len(traindata)
+                accuracy = correct / len(traindata)
+                print(f"{epoch}, Loss: {average_loss}, Accuracy: {accuracy}")
+
+    # ✅ 바깥에 정의된 predict 메서드
     def predict(self, inputs):
         _, output = self.feedforward(inputs)
         return output.index(max(output))
-
 # 신경망 생성 및 훈련
 input_nodes = 4
 hidden_nodes = 5
@@ -169,3 +163,17 @@ training_labels = [i // num_data_per_class for i in range(len(traindata))]
 epochs = 200
 learning_rate = 0.01
 nn_modified.train_epochs_time(traindata, learning_rate, epochs, training_labels)
+
+# 테스트 라벨 설정
+num_data_per_class_test = len(testdata) // output_nodes
+test_labels = [i // num_data_per_class_test for i in range(len(testdata))]
+
+# 테스트 정확도 평가
+correct = 0
+for i, test_point in enumerate(testdata):
+    predicted_label = nn_modified.predict(test_point)
+    if predicted_label == test_labels[i]:
+        correct += 1
+
+accuracy = correct / len(testdata)
+print(f"Test Accuracy: {accuracy:.4f}")
